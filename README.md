@@ -1,2 +1,2 @@
 # LaneMapping
-Large-scale lane mapping using MLS point clouds.
+Large-scale lane mapping from MLS point clouds.

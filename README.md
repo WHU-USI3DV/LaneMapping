@@ -4,7 +4,7 @@
 
 This is the official PyTorch implementation of the following publication:
 
-> **SparseDC: Depth completion from sparse and non-uniform inputs**<br/>
+> **A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds**<br/>
 > [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/)<br/>
 > *International Journal of Applied Earth Observation and Geoinformation(JAG) 2024*<br/>
 > [**Paper**](TODO:url) | [**Project-page**]() | [**Video**]()
@@ -14,7 +14,7 @@ This is the official PyTorch implementation of the following publication:
 <p align="center" style="font-size:18px">
 <strong>A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds</strong>
 </p>
-<img src="media/teaser.jpg" alt="Network" style="zoom:30%; margin: 0" loc="mid">
+<img src="media/teaser.jpg" alt="Network" style="zoom:10%; margin: 0" loc="mid">
 
 <p align="justify">
 <strong>Abstract:</strong> Accurate lane maps with semantics are crucial for various applications, such as high-definition maps (HD Maps), intelligent transportation systems (ITS), and digital twins. Manual annotation of lanes is labor-intensive and costly, prompting researchers to explore automatic lane extraction methods. 

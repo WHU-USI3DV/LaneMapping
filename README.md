@@ -4,17 +4,17 @@
 
 This is the official PyTorch implementation of the following publication:
 
-> **A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds**<br/>
-> [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/)<br/>
-> *International Journal of Applied Earth Observation and Geoinformation(JAG) 2024*<br/>
+> **A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds**`<br/>`
+> [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/)`<br/>`
+> *International Journal of Applied Earth Observation and Geoinformation(JAG) 2024*`<br/>`
 > [**Paper**](TODO:url) | [**Project-page**]() | [**Video**]()
 
-
 ## 🔭 Introduction
+
 <p align="center" style="font-size:18px">
 <strong>A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds</strong>
 </p>
-<img src="media/teaser.jpg" alt="Network" style="zoom:10%; margin: 0" loc="mid">
+<img src="media/teaser.jpg" alt="Network" style="zoom:10%;">
 
 <p align="justify">
 <strong>Abstract:</strong> Accurate lane maps with semantics are crucial for various applications, such as high-definition maps (HD Maps), intelligent transportation systems (ITS), and digital twins. Manual annotation of lanes is labor-intensive and costly, prompting researchers to explore automatic lane extraction methods. 
@@ -25,11 +25,14 @@ Comprehensive experiments conducted on three lane datasets have demonstrated the
 </p>
 
 ## 🆕 News
+
 - 2024-09-10: [LaneMapping] code and dataset are publicly accessible! 🎉
 - 2024-09-02: our paper is accepted for publication in International Journal of Applied Earth Observation and Geoinformation(JAG)! 🎉
 
 ## 💻 Requirements
+
 The code has been trained on:
+
 - Ubuntu 20.04
 - CUDA 11.8 (Other versions should be okay.)
 - Python 3.8
@@ -37,6 +40,7 @@ The code has been trained on:
 - A GeForce RTX 4090.
 
 ## 🔧 Installation
+
 #### a. Create a conda virtual environment and activate it.
 
 ```
@@ -87,9 +91,11 @@ export PATH=$PATH:/path/to/your/lanemap/dir  # set the work path
 ```
 
 ## 💾 Datasets
+
 We used WHU-Lane for training and three datasets for evaluation.
 
 #### WHU-Lane
+
 WHU-Lane data structure is as follows:
 
 ```
@@ -131,13 +137,14 @@ WHU-Lane
      │    └── sparse_semantic
      └── ...
 ```
+
 ## 🚅 Pretrained model (TODO)
 
 You can download the pretrained model from [GoogleDrive](https://drive.google.com/drive/folders/1EmTFrqGnnh9a5ZsQ8ydSZC3PK-NeGDlX?usp=sharing), and put it in folder `pretrain/`.
 
 ## ⏳ Train (TODO)
 
-To train SparseDC, you should prepare the dataset, and replace the ["data_dir"](/configs/paths/default.yaml) to your data path. Then, you use the follow command:
+To train SparseDC, you should prepare the dataset, and replace the [&#34;data_dir&#34;](/configs/paths/default.yaml) to your data path. Then, you use the follow command:
 
 ```bash
 $ python train.py experiment=final_version         # for NYUDepth
@@ -145,7 +152,9 @@ $ python train.py experiment=final_version_kitti   # for KITTIDC
 ```
 
 ## ✏️ Test (TODO)
+
 To eval SparseDC on three benchmarks, you can use the following commands:
+
 ```bash
 $ ./eval_nyu.sh final_version final_version pretrain/nyu.ckpt
 $ ./eval_kitti.sh final_version_kitti final_version_kitti_test pretrain/kitti.ckpt
@@ -153,6 +162,7 @@ $ ./eval_sunrgbd.sh final_version final_version pretrain/nyu.ckpt
 ```
 
 ## 💡 Citation (TODO)
+
 If you find this repo helpful, please give us a 😍 star 😍.
 Please consider citing SparseDC if this program benefits your project
 
@@ -162,7 +172,9 @@ Please consider citing SparseDC if this program benefits your project
 ```
 
 ## 🔗 Related Projects
+
 We sincerely thank the excellent projects:
+
 - [KLane](https://github.com/kaist-avelab/K-Lane.git) for code framework;
 - [MapTR](https://github.com/hustvl/MapTR) for lidar encoder;
 - [FreeReg](https://github.com/WHU-USI3DV/FreeReg) for readme template;

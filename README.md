@@ -4,9 +4,9 @@
 
 This is the official PyTorch implementation of the following publication:
 
-> **A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds** <br/>
-> [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/) <br/>
-> *International Journal of Applied Earth Observation and Geoinformation(JAG) 2024*<br/>
+> **A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds** `<br/>`
+> [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/) `<br/>`
+> *International Journal of Applied Earth Observation and Geoinformation(JAG) 2024* `<br/>`
 > [**Paper**](TODO:url) | [**Project-page**]() | [**Video**]()
 
 ## 🔭 Introduction
@@ -99,7 +99,13 @@ We used WHU-Lane for training and three datasets for evaluation.
 WHU-Lane data structure is as follows:
 
 ```
-WHU-Lane
+mkdir data
+cd data
+ln -s /path/to/downloaded/WHU-Lane .
+```
+
+```
+WHU-LaserLane
 ├── TrainValAll
 │    ├── cropped_tiff
 │    │    ├── 000000_0001.png
@@ -138,36 +144,58 @@ WHU-Lane
      └── ...
 ```
 
-## 🚅 Pretrained model (TODO)
+## 🚅 Pretrained model and WHU-LaserLane Dataset
 
-You can download the pretrained model from [GoogleDrive](https://drive.google.com/drive/folders/1EmTFrqGnnh9a5ZsQ8ydSZC3PK-NeGDlX?usp=sharing), and put it in folder `pretrain/`.
+You can download the pretrained model from[BaiduDisk](https://pan.baidu.com/s/1F5iAXs6HzHxWmJ4dwGBEmw?pwd=y2z9) or [GoogleDrive](https://drive.google.com/file/d/13QCwtbl45nyOOWTN8AyUgc_9z66Dyz0c/view?usp=sharing), and put it in folder `logs/` and unzip it.
 
-## ⏳ Train (TODO)
+You can download only the generated BEV images and corresponding annotations of WHU-LaserLane dataset from[BaiduDisk](https://pan.baidu.com/s/1yiuU_V3VlTw7ogD8Tjjvag?pwd=47v6) or [GoogleDrive](), and put it in folder `logs/` and unzip it.
 
-To train SparseDC, you should prepare the dataset, and replace the [&#34;data_dir&#34;](/configs/paths/default.yaml) to your data path. Then, you use the follow command:
+Or whole WHU-LaserLane dataset from [BaiduDisk]().
 
-```bash
-$ python train.py experiment=final_version         # for NYUDepth
-$ python train.py experiment=final_version_kitti   # for KITTIDC
-```
+## ⏳ Train
 
-## ✏️ Test (TODO)
-
-To eval SparseDC on three benchmarks, you can use the following commands:
+To train the LaneMapping network, you should prepare the dataset, and put it in  './data/.'. Then, you use the follow command:
 
 ```bash
-$ ./eval_nyu.sh final_version final_version pretrain/nyu.ckpt
-$ ./eval_kitti.sh final_version_kitti final_version_kitti_test pretrain/kitti.ckpt
-$ ./eval_sunrgbd.sh final_version final_version pretrain/nyu.ckpt
+$ python train_gpu_0.py
 ```
 
-## 💡 Citation (TODO)
+## ✏️ Test
+
+To eval LaneMapping on the other two test areas, you can use the following commands, and do not forget modify the corresponding datapath in config file:
+
+```bash
+$python test_gpu_0.py
+```
+
+## ✏️ Merge local lane map to the global map
+
+Firstly, convert the predicted lanes on BEV to the LiDAR coordinate system.
+```bash
+$python ./baseline/utils/coor_img2pc.py
+```
+
+Then, merge the local lane map to the global lane map.
+```bash
+$python ./baseline/utils/merge_lines.py
+```
+
+## 💡 Citation
 
 If you find this repo helpful, please give us a 😍 star 😍.
 Please consider citing SparseDC if this program benefits your project
 
 ```Tex
-@article{
+@article{MI2024104139,
+title = {A benchmark approach and dataset for large-scale lane mapping from MLS point clouds},
+journal = {International Journal of Applied Earth Observation and Geoinformation},
+volume = {133},
+pages = {104139},
+year = {2024},
+issn = {1569-8432},
+doi = {https://doi.org/10.1016/j.jag.2024.104139},
+url = {https://www.sciencedirect.com/science/article/pii/S156984322400493X},
+author = {Xiaoxin Mi and Zhen Dong and Zhipeng Cao and Bisheng Yang and Zhen Cao and Chao Zheng and Jantien Stoter and Liangliang Nan}
 }
 ```
 
@@ -175,6 +203,6 @@ Please consider citing SparseDC if this program benefits your project
 
 We sincerely thank the excellent projects:
 
-- [KLane](https://github.com/kaist-avelab/K-Lane.git) for code framework;
+- [KLane](https://github.com/kaist-avelab/K-Lane.git) for base code framework;
 - [MapTR](https://github.com/hustvl/MapTR) for lidar encoder;
-- [FreeReg](https://github.com/WHU-USI3DV/FreeReg) for readme template;
+- [FreeReg](https://github.com/WHU-USI3DV/FreeReg)  and [SparseDC](https://github.com/WHU-USI3DV/SparseDC)for readme template.

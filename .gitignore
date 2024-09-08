@@ -1,0 +1,12 @@
+.idea/
+logs/
+*.pth
+!*.py
+*.pyc
+.work_dir_tmp_file.txt
+*.log
+val_log/
+checkpoints/
+mmdetection3d
+__pycache__
+data/*

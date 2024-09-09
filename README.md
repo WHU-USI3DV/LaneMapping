@@ -4,9 +4,9 @@
 
 This is the official PyTorch implementation of the following publication:
 
-> **A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds**
-> [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/) 
-> *International Journal of Applied Earth Observation and Geoinformation(JAG) 2024* 
+><br>**A Benchmark Approach and Dataset for Large-scale Lane Mapping from MLS Point Clouds** </br>
+><br> [Xiaoxin Mi](https://mixiaoxin.github.io/), [Zhen Dong](https://dongzhenwhu.github.io/index.html), Zhipeng Cao, [Bisheng Yang](https://3s.whu.edu.cn/info/1025/1415.htm),[Zhen Cao](https://github.com/a4152684), Chao Zheng, [Jantien Stoter](https://3d.bk.tudelft.nl/jstoter/), [Liangliang Nan](https://3d.bk.tudelft.nl/liangliang/) </br>
+> <br>*International Journal of Applied Earth Observation and Geoinformation(JAG) 2024* </br>
 > [**Paper**](TODO:url) | [**Project-page**]() | [**Video**]()
 
 ## 🔭 Introduction

@@ -10,3 +10,8 @@ checkpoints/
 mmdetection3d
 __pycache__
 data/*
+#!data/2-split_data.py
+#!data/5-cut-inside-seq.py
+!data/convert_data.py
+!data/__init__.py
+

@@ -27,7 +27,7 @@ Comprehensive experiments conducted on three lane datasets have demonstrated the
 ## 🆕 News
 
 - 2024-09-10: [LaneMapping] code and dataset are publicly accessible! 🎉
-- 2024-09-02: our paper is accepted for publication in International Journal of Applied Earth Observation and Geoinformation(JAG)! 🎉
+- 2024-09-02: our paper is accepted for publication in the International Journal of Applied Earth Observation and Geoinformation(JAG)! 🎉
 
 ## 💻 Requirements
 
@@ -146,15 +146,15 @@ WHU-LaserLane
 
 ## 🚅 Pretrained model and WHU-LaserLane Dataset
 
-You can download the pretrained model from[BaiduDisk](https://pan.baidu.com/s/1F5iAXs6HzHxWmJ4dwGBEmw?pwd=y2z9) or [GoogleDrive](https://drive.google.com/file/d/13QCwtbl45nyOOWTN8AyUgc_9z66Dyz0c/view?usp=sharing), and put it in folder `logs/` and unzip it.
+You can download the pre-trained model from[BaiduDisk](https://pan.baidu.com/s/1F5iAXs6HzHxWmJ4dwGBEmw?pwd=y2z9) or [GoogleDrive](https://drive.google.com/file/d/13QCwtbl45nyOOWTN8AyUgc_9z66Dyz0c/view?usp=sharing), and put it in folder `logs/` and unzip it.
 
 You can download only the generated BEV images and corresponding annotations of WHU-LaserLane dataset from[BaiduDisk](https://pan.baidu.com/s/1yiuU_V3VlTw7ogD8Tjjvag?pwd=47v6) or [GoogleDrive](https://drive.google.com/file/d/16YDb_cwFr5iLkLzQSnuhkULjJ4JfjNIJ/view?usp=sharing), and put it in folder `./data/` and unzip it.
 
-Or whole WHU-LaserLane dataset from [BaiduDisk](https://pan.baidu.com/s/1u6ASAP3YyDUJFdyuq_dW4g?pwd=uupb).
+Or the whole WHU-LaserLane dataset from [BaiduDisk](https://pan.baidu.com/s/1u6ASAP3YyDUJFdyuq_dW4g?pwd=uupb).
 
 ## ⏳ Train
 
-To train the LaneMapping network, you should prepare the dataset, and put it in  './data/.'. Then, you use the follow command:
+To train the LaneMapping network, you should prepare the dataset and put it in  './data/.'. Then, you use the following command:
 
 ```bash
 $ python train_gpu_0.py
@@ -183,7 +183,7 @@ $python ./baseline/utils/merge_lines.py
 ## 💡 Citation
 
 If you find this repo helpful, please give us a 😍 star 😍.
-Please consider citing SparseDC if this program benefits your project
+Please consider citing **LaneMapping** if this program benefits your project
 
 ```Tex
 @article{MI2024104139,

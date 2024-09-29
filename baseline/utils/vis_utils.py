@@ -11,7 +11,6 @@ import random
 import torch
 import open3d as o3d
 
-import configs.config_vis as cnf
 
 __all__ = ['get_bi_seg_on_image', 'get_endp_on_raw_image',\
              'get_metrics_conf_cls', 'get_lane_on_raw_image_coordinates', \

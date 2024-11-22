@@ -758,7 +758,7 @@ class ColumnProposal2(nn.Module):
 
         return dict_ret
     
-    def get_lane_map_numpy_with_label(self, output, data, is_flip=True, is_img=False, is_get_1_stage_result=False):
+    def get_lane_map_numpy_with_label(self, output, data, is_flip=True, is_img=False, is_get_1_stage_result=False, is_gt_avai=True):
         '''
         * in : output feature map
         * out: lane map with class or confidence
@@ -795,16 +795,19 @@ class ColumnProposal2(nn.Module):
         list_semantic_line_pred = []
 
         batch_size, num_prop, num_hv, num_wc = output['prop_cls_conf'].shape
-
-        coor_label_all = data['lc_coor_raw']
+        if is_gt_avai:
+            coor_label_all = data['lc_coor_raw']
+            for batch_idx in range(batch_size):
+                # _, coor_label, _, _ = self.get_line_existence_and_cls_wise_maps_per_batch(raw_label[batch_idx], n_cls=self.num_cls, downsample=False)
+                coor_label = coor_label_all[batch_idx, ...].cpu().numpy()
+                list_coor_label.append(coor_label)
+                
         for batch_idx in range(batch_size):
-            # _, coor_label, _, _ = self.get_line_existence_and_cls_wise_maps_per_batch(raw_label[batch_idx], n_cls=self.num_cls, downsample=False)
-            coor_label = coor_label_all[batch_idx, ...].cpu().numpy()
             # 144, 144
             prop_conf = output['prop_conf'][batch_idx, :, 1]  # channel-1 is the proposal existing confidence
             prop_exist_v = output['prop_v_ext'][batch_idx, :, :].cpu().numpy() # (n_proposal, row_num)
             prop_cls_conf_v = output['prop_cls_conf'][batch_idx, :, :, :].cpu().numpy()   # (n_proposal, row_num, 20)
-
+            
             # whether exist the lane in the proposal
             prop_no_exist = torch.where(prop_conf < self.cfg.proposal_obj_thre)[0]
             prop_exist_v[prop_no_exist, :] = 0.
@@ -853,7 +856,6 @@ class ColumnProposal2(nn.Module):
             cls_coor_offset_smooth, endp_pred_raw = polyline_uniform_semantics_by_statistics(cls_coor_offset_smooth, endp_pred_raw, r_buff=20)
             cls_coor_offset_smooth = remove_short_polyline(cls_coor_offset_smooth, min_v_count=8)
             semantic_line_map_renew = renew_semantic_map(cls_coor_offset_smooth)
-            list_coor_label.append(coor_label)
             list_cls_offset_smooth.append(cls_coor_offset_smooth)
             list_endp_pred.append(endp_pred_raw)
             list_semantic_line_pred.append(semantic_line_map_renew)
@@ -955,11 +957,12 @@ class ColumnProposal2(nn.Module):
             raw_image_gray = cv2.cvtColor(raw_image.transpose(1, 2, 0), cv2.COLOR_RGB2GRAY)
             raw_image_gray = cv2.cvtColor(raw_image_gray, cv2.COLOR_GRAY2RGB)
             raw_image_gray *= 255
-            # gt_endp_init = (data['initp'][batch_idx] + data['init_offset'][batch_idx]).cpu().numpy() * 8
-            # gt_endp_end = (data['endp'][batch_idx] + data['end_offset'][batch_idx]).cpu().numpy() * 8
-            gt_endp_init = (data['initp'][batch_idx]).cpu().numpy()
-            gt_endp_end = (data['endp'][batch_idx]).cpu().numpy()
-            gt_endp_coors = [[gt_endp_init[lane_id], gt_endp_end[lane_id]] for lane_id in range(self.num_cls)]
+            if self.cfg.is_gt_avai:
+                # gt_endp_init = (data['initp'][batch_idx] + data['init_offset'][batch_idx]).cpu().numpy() * 8
+                # gt_endp_end = (data['endp'][batch_idx] + data['end_offset'][batch_idx]).cpu().numpy() * 8
+                gt_endp_init = (data['initp'][batch_idx]).cpu().numpy()
+                gt_endp_end = (data['endp'][batch_idx]).cpu().numpy()
+                gt_endp_coors = [[gt_endp_init[lane_id], gt_endp_end[lane_id]] for lane_id in range(self.num_cls)]
             # raw_image_gray = get_gt_endp_on_raw_image(gt_endp_coors, raw_image_gray) # NOT SHOW GT ENDPOINTS
             raw_image_gray_gt = raw_image_gray.copy()
             raw_image_gray_bi_seg = raw_image_gray.copy()
@@ -997,13 +1000,14 @@ class ColumnProposal2(nn.Module):
             pred_lane_coors_offset[:, :, 2] = output['lane_maps']['cls_offset_smooth'][batch_idx][:, :, 1]
             
             # for ground truth
-            gt_lane_coors = np.zeros((self.cfg.number_lanes, self.row_size, 2))
-            gt_lane_coors[:, :, 0] = np.arange(3, 1152, 8)
-            gt_lane_coors[:, :, 1] = output['lane_maps']['coor_label'][batch_idx]
-            for lane_id in range(self.cfg.number_lanes): 
-                lane_coor = gt_lane_coors[lane_id, ...]
-                lane_coor = lane_coor[np.where(lane_coor[:, 1] > 0)]
-                raw_image_gray_gt = get_lane_on_raw_image_coordinates(lane_coor, lane_id, raw_image_gray_gt)
+            if self.cfg.is_gt_avai:
+                gt_lane_coors = np.zeros((self.cfg.number_lanes, self.row_size, 2))
+                gt_lane_coors[:, :, 0] = np.arange(3, 1152, 8)
+                gt_lane_coors[:, :, 1] = output['lane_maps']['coor_label'][batch_idx]
+                for lane_id in range(self.cfg.number_lanes): 
+                    lane_coor = gt_lane_coors[lane_id, ...]
+                    lane_coor = lane_coor[np.where(lane_coor[:, 1] > 0)]
+                    raw_image_gray_gt = get_lane_on_raw_image_coordinates(lane_coor, lane_id, raw_image_gray_gt)
            
             # upsample endpoint
             discrete_endp = output['lane_maps']['endp_by_cls'][batch_idx]
@@ -1047,7 +1051,8 @@ class ColumnProposal2(nn.Module):
                                                                                      raw_image_gray_coor_exp)
 
             list_source_img.append(raw_image_gray)
-            list_gt_on_img.append(raw_image_gray_gt)
+            if self.cfg.is_gt_avai:
+                list_gt_on_img.append(raw_image_gray_gt)
             list_org_lanes_smooth_vertex.append(pred_lane_coors_offset)
             list_org_lanes_binary_seg.append(raw_image_gray_bi_seg)
             list_org_lanes_on_img_offset.append(raw_image_gray_coor_offset)

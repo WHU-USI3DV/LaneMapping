@@ -8,7 +8,7 @@ import json
 
 from data.convert_data import NpEncoder
 # import NpEncoder
-
+    
 def save_seqs_json(seq_list, seq_path):
     with open(seq_path, "w") as f:
         json.dump(seq_list, f, indent=4, cls=NpEncoder)

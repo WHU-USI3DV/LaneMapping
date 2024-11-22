@@ -36,7 +36,7 @@ except:
 @DATASETS.register_module
 class LaserLaneProposal(Dataset):
     def __init__(self, data_root,  data_split_file, mode="valid", cfg=None):
-        assert mode in {"train", "valid", "test", "single", "all"}
+        assert mode in {"train", "valid", "test", "single", "all", "infer_only"}
         sub_img_path = 'cropped_tiff'
         sub_label_path = 'labels'   # lidar bev annotations
         image_path = osp.join(data_root, sub_img_path)
@@ -71,23 +71,41 @@ class LaserLaneProposal(Dataset):
         return self.seq_len
 
     def __getitem__(self, idx):
-        image_name = self.image_stem_list[idx]
-        meta = dict()
-        meta['image_name'] = image_name[0:11]
-
         sample = dict()
-        sample['proj'], meta['mask'], meta['instance'], meta['instance_raw'], meta['ori'], meta['endp_map'] = load_image(
-            self.image_list[idx], self.mask_list[idx], self.instance_list[idx], ori_path=self.ori_list[idx], endp_path=self.endp_list[idx],
+        image_name = self.image_stem_list[idx]
+        sample['image_name'] = image_name[0:11]
+        sample['proj'] = self.load_img(idx=idx)
+        
+        if self.mode in {"train", "valid", "test", "single", "all"}:
+            sample_prop = self.format_gt_column_proposal(idx)
+            sample.update(sample_prop)
+        
+        return sample
+
+    def load_img(self, idx):
+        image_path = self.image_list[idx]
+        img = Image.open(image_path)
+        img = np.array(img, dtype=np.uint8)
+        img = torchvision.transforms.functional.to_tensor(img).float()
+        assert img.shape[1] == img.shape[2]
+        
+        # BEV
+        if img.shape[0] > 3:
+            img = img[0:3, :, : ]
+        if self.cfg.dataset_color_augment:
+                img = self.img_transform(img)
+    
+        return img
+        
+         
+        
+    def format_gt_column_proposal(self, idx):
+        meta = dict()
+        meta['mask'], meta['instance'], meta['instance_raw'], meta['ori'], meta['endp_map'] = load_label_image(
+            self.mask_list[idx], self.instance_list[idx], ori_path=self.ori_list[idx], endp_path=self.endp_list[idx],
             downsample_instance=True, downsample_ratio=self.cfg.gt_downsample_ratio)
         _, _, meta['initp'], meta['endp'], _, _, meta['semantic'] = load_seq(self.seq_list[idx], downsample_vertex=False)
-        if self.mode == 'train':
-            pass
-        else:
-            sample['image_name'] = meta['image_name']
-        # BEV
-        if sample['proj'].shape[0] > 3:
-            sample['proj'] = sample['proj'][0:3, :, : ]
-        
+  
         # Labels on BEV
         if len(meta['initp']) != len(meta['endp']):
             print('init_point shape is {}; end_point shape is {}'.format(len(meta['initp']), len(meta['endp'])))
@@ -101,6 +119,7 @@ class LaserLaneProposal(Dataset):
         meta['instance'] = np.where(meta['instance'] == 0, 255, meta['instance']-1)
         meta['instance_raw'] = np.where(meta['instance_raw'] == 0, 255, meta['instance_raw'] - 1)
 
+        sample = dict()
         sample['label'] = meta['instance']
         sample['label_raw'] = meta['instance_raw']
         sample['ori'] = meta['ori']
@@ -211,13 +230,7 @@ class LaserLaneProposal(Dataset):
         lb_lc_cls_raw[torch.where(lb_lc_cls_raw > -1.)] *= self.cfg.gt_downsample_ratio
         ###############################################################################################################
         sample_propsal = dict()
-        if self.cfg.dataset_color_augment:
-            sample_propsal['proj'] = self.img_transform(sample['proj'])
-        else:
-            sample_propsal['proj'] = sample['proj']
         if self.mode is not 'train':  # data augmentation
-            sample['image_name'] = meta['image_name']
-            sample_propsal['image_name'] = sample['image_name']  # only for evaluation
             sample_propsal['initp'] = sample['initp']  # only for evaluation
             sample_propsal['endp'] = sample['endp']    # only for evaluation
             sample_propsal['mask'] = sample['mask']     # only for evaluation
@@ -490,7 +503,7 @@ def load_datadir(data_root, data_split_file, image_path, seq_path, mask_path, in
     test_list = list(json_list['test'])  # all data: pretrain;   # test/val: test
     val_list = list(json_list['valid'])
     single_list = list(json_list['single'])
-    pretrain_list = list(json_list['pretrain'])
+    all_list = list(json_list['all'])
 
     if mode == 'single':
         json_list = [x + '.json' for x in single_list]
@@ -499,8 +512,8 @@ def load_datadir(data_root, data_split_file, image_path, seq_path, mask_path, in
     elif mode == 'test':
         random.shuffle(test_list)
         json_list = [x + '.json' for x in test_list]
-    elif mode == 'all':
-        json_list = [x + '.json' for x in pretrain_list]
+    elif mode == 'all' or mode == 'infer_only':
+        json_list = [x + '.json' for x in all_list]
     else:
         json_list = [x + '.json' for x in train_list]
 
@@ -572,12 +585,8 @@ def load_seq(seq_path, cfg=None, downsample_vertex=True, downsample_ratio=8):
     return seq, seq_lens, init_points, end_points, init_offsets, end_offsets, semantics
 
 
-def load_image(image_path, mask_path, instance_path, ori_path=None, endp_path=None, downsample_instance=True, downsample_ratio=8):
-    img = Image.open(image_path)
-    img = np.array(img, dtype=np.uint8)
-    img = torchvision.transforms.functional.to_tensor(img).float()
-
-    assert img.shape[1] == img.shape[2]
+def load_label_image(mask_path, instance_path, ori_path=None, endp_path=None, downsample_instance=True, downsample_ratio=8):
+    
     # mask = np.array(Image.open(mask_path))[:,:,0]
     mask = np.array(Image.open(mask_path))  # for 1 channel
     # mask = mask / 128  # for 2 classes, solid is 1, dashed is 2
@@ -604,7 +613,7 @@ def load_image(image_path, mask_path, instance_path, ori_path=None, endp_path=No
         # ori = np.array(Image.open(ori_path))[:,:,0]
         ori_map = np.array(Image.open(ori_path))  # for 1 channel
 
-    return img, mask, instance_down, instance, ori_map, endp_map
+    return mask, instance_down, instance, ori_map, endp_map
 
 def read_las(filepath):
     las = laspy.read(filepath)

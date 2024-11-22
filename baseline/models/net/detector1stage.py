@@ -57,7 +57,8 @@ class Detector1stage(nn.Module):
             output.update(self.heads.get_exist_coor_endp_dict(out))
             output.update({
                     'lane_maps': self.heads.get_lane_map_numpy_with_label(
-                        output, batch, is_flip=self.cfg.flip_label, is_img=self.cfg.view, is_get_1_stage_result=False)})
+                        output, batch, is_flip=self.cfg.flip_label, is_img=self.cfg.view, is_get_1_stage_result=False,
+                        is_gt_avai=self.cfg.is_gt_avai)})
             if self.cfg.show_result:
                 output.update({
                     'pred_maps': self.heads.get_lane_map_on_source_image(output, batch)})

@@ -687,11 +687,14 @@ class Runner(object):
         print(f'coordinate_f1={coor_f1s}')
         
 
-    def infer_lane_coordinate_endpoint_semantics(self, path_ckpt=None, mode_view=False, gt_avail=True, \
+    def infer_lane_coordinate_endpoint_semantics(self, path_ckpt=None, mode_data=None, mode_view=False, gt_avail=True, \
                                                  write_lane_vertex=False, \
                                                  eval_coor=True, eval_endp=True, eval_semantic=True):
-        self.val_loader = build_dataloader(self.cfg.dataset.test, self.cfg, is_train=False)
-        # self.val_loader = build_dataloader(self.cfg.dataset.all, self.cfg, is_train=False)
+        if mode_data==None:
+            self.val_loader = build_dataloader(self.cfg.dataset.test, self.cfg, is_train=False)
+        else:
+            self.val_loader = build_dataloader(mode_data, self.cfg, is_train=False)
+        print('data_loader length: ', len(self.val_loader))
         if path_ckpt:
             trained_model = torch.load(path_ckpt)
             self.net.load_state_dict(trained_model['net'], strict=True)
@@ -725,14 +728,16 @@ class Runner(object):
                 output = self.net(data)
                 ########################################################################################################
                 ### quantitative evaluation ###
-                if gt_avail:
-                    lane_maps = output['lane_maps']
+                lane_maps = output['lane_maps']
+                total_batch_size = self.cfg.batch_size
+                if i == (len(self.val_loader)-1):
+                    total_batch_size = len(lane_maps['coor_label'])
+                        
+                if gt_avail:  
                     endp_map_gt = data['endp_map'].cpu().detach().numpy()
                     semantic_map_gt = data['mask'].cpu().detach().numpy()
                     batch_f1 = 0.
-                    total_batch_size = self.cfg.batch_size
-                    if i == (len(self.val_loader)-1):
-                        total_batch_size = len(lane_maps['coor_label'])
+                   
                 for batch_idx in range(total_batch_size):
                     if gt_avail & eval_coor:
                         coor_label = lane_maps['coor_label'][batch_idx]
@@ -780,26 +785,29 @@ class Runner(object):
                         semantic_dets += sem_pts
                         semantic_DG += sem_DGs
                         semantic_gts += sem_gt_pts
-                    f1_ave = (f1_ave * i + batch_f1) / (i + 1)
+                    
+                    # f1_ave = (f1_ave * i + batch_f1) / (i + 1)
 
                 ########################################################################################################
                     ### begin: qualitative evaluation ###
-                   
                     if mode_view: 
                         pred_maps = output['pred_maps']
-                        source_img = pred_maps['source_img_gray'][batch_idx]
-                        gt_on_source_img = pred_maps['gt_on_img'][batch_idx]                      
+                        source_img = pred_maps['source_img_gray'][batch_idx]                      
                         pred_bi_seg_on_img = pred_maps['pred_bi_seg_on_image'][batch_idx]
                         pred_offset_lane_on_img = pred_maps['pred_offset_lanes_on_image'][batch_idx]
                         
                         cv2.imwrite(os.path.join(self.cfg.work_dirs, data['image_name'][batch_idx] + '_source.png'),
                                 source_img)
-                        cv2.imwrite(os.path.join(self.cfg.work_dirs, data['image_name'][batch_idx] + '_gt.png'),
-                                gt_on_source_img)
                         cv2.imwrite(os.path.join(self.cfg.work_dirs, data['image_name'][batch_idx] + '_offset.png'),
                                 pred_offset_lane_on_img)
                         cv2.imwrite(os.path.join(self.cfg.work_dirs, data['image_name'][batch_idx] + '_seg.png'),
                                 pred_bi_seg_on_img)
+                        
+                        if gt_avail:
+                            gt_on_source_img = pred_maps['gt_on_img'][batch_idx]
+                            cv2.imwrite(os.path.join(self.cfg.work_dirs, data['image_name'][batch_idx] + '_gt.png'),
+                                gt_on_source_img)
+                            
                         if self.cfg.view_detail:
                             pred_org_lane_on_img = pred_maps['pred_org_lanes_on_image'][batch_idx]
                             pred_smooth_lane_on_img = pred_maps['pred_smooth_lanes_on_image'][batch_idx]

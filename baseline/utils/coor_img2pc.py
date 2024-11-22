@@ -274,11 +274,10 @@ def test_single_file():
                                               pc_seqfile_path, pc_seqfile_txt_path)
 
 if __name__ == "__main__":
-
     # multiprocessing
-    img_seqfile_dir = '/home/mxx/mxxcode/klane-regress/logs/vis/LaserLaneProposal'
-    bev_img_dir = '/data/mxx/data/LaserLane/TestArea-1/cropped_tiff'
-    pc_img_params_dir = '/data/mxx/data/LaserLane/TestArea-2/cropped_tiff-param'
+    img_seqfile_dir = '/home/mxx/mxxcode/LaneMapping/logs/vis/LaserLaneProposal'
+    bev_img_dir = '/mnt/data/LaneMapping/LaserLane/Test-Area-Nanjing/cropped_tiff'
+    pc_img_params_dir = '/mnt/data/LaneMapping/LaserLane/Test-Area-Nanjing/cropped_tiff_param'
     multiprocessing_seqs_files(img_seqfile_dir, bev_img_dir, pc_img_params_dir)
 
     # test single file

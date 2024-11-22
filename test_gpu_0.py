@@ -54,10 +54,13 @@ def main():
     runner.cfg.view_detail = False
     # print("cfg: ", runner.cfg)
     # Xiaoxin's Method:
-    runner.infer_lane_coordinate_endpoint_semantics(path_ckpt=path_ckpt, mode_view=True, \
+    mode_data = cfg.dataset.infer_only  # if only infer without evaluation
+    # mode_data = cfg.dataset.test        # if infer with evaluation (ground truth available)
+    runner.infer_lane_coordinate_endpoint_semantics(path_ckpt=path_ckpt, mode_data=mode_data,  mode_view=True, gt_avail=cfg.is_gt_avai,\
                                                     write_lane_vertex=True, \
-                                                    eval_coor=True, eval_endp=False, eval_semantic=True
+                                                    eval_coor=False, eval_endp=False, eval_semantic=False
                                                     )
+    
     
     # KLane:
     # runner.infer_lane_coordinate(path_ckpt=path_ckpt, mode_view=True, gt_avail=True, write_lane_vertex=False)

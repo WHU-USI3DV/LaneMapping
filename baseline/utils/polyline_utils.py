@@ -18,6 +18,32 @@ def Hausdorf_distance(line1, line2):
         min_dist = np.min(dist_valid)
     return min_dist, max_dist, mean_dist
 
+
+def lines_align(line1, line2):
+    '''
+    Param_in: line-1: column values for line1
+    param_in: line-2: column calues for line2
+    
+    return: line-1 , line-2 (line-1 is always at the left of line-2)
+    '''
+    dists = np.abs(line1 - line2)
+    dists[np.where(line1 < 0)] = -1
+    dists[np.where(line2 < 0)] = -1  # calculate the minimum distance for each overlapping vertex
+    over_lap_rows = np.where(dists >= 0.00001)[0]
+    # print('overlap_rows: ', over_lap_rows)
+    for row_id in over_lap_rows:
+        if line2[row_id] < line1[row_id]:
+            tmp_value = line1[row_id]
+            line1[row_id] = line2[row_id]
+            line2[row_id] = tmp_value
+        if abs(line1[row_id] - line2[row_id]) < 2.0:
+            if abs(line1[row_id] - line1[row_id-1]) < abs(line2[row_id] - line2[row_id-1]) and line1[row_id-1] > 0 and line2[row_id-1]>0:
+                line2[row_id] = -1  # refine this vertex
+            else:
+                line1[row_id] = -1
+        
+    return line1, line2
+
 def line_slop(lines):
     slops = np.zeros(len(lines))
     for id in range(len(lines)):
@@ -41,10 +67,12 @@ def polyline_NMS2(arr_cls_vertex, semantic_map):
     Returns:
         polylines after Non-Maximum Suppression
     '''
-    mean_dist_thre = 15
+    mean_dist_thre = 10
     active_id = 0
     num_lane, num_h = arr_cls_vertex.shape
     # arr_slops = line_slop(arr_cls_vertex)
+    opt_point_2_point = True  # This performs better
+    opt_line_align = True
 
     while active_id < num_lane - 1:  # for every lane
         if len(np.where(arr_cls_vertex[active_id, :] > 0)[0]) < 2:
@@ -55,56 +83,59 @@ def polyline_NMS2(arr_cls_vertex, semantic_map):
             if len(np.where(arr_cls_vertex[idx_l, :] > 0)[0]) < 2:
                 continue
             else:
-                min_dist, _, _ = Hausdorf_distance(arr_cls_vertex[active_id, :], arr_cls_vertex[idx_l, :])
+                min_dist, _, mean_dist = Hausdorf_distance(arr_cls_vertex[active_id, :], arr_cls_vertex[idx_l, :])
                 last_active_v = None
                 last_check_v = None
                 if (min_dist >= 0.) and (min_dist < mean_dist_thre):  # two close lines, then merge them
-                    for idx_h in range(num_h):
-                        if arr_cls_vertex[active_id, idx_h] < 0 and arr_cls_vertex[idx_l, idx_h] < 0:  # two lines have no vertex at this location
-                            continue
-                        elif arr_cls_vertex[active_id, idx_h] > 0 and arr_cls_vertex[idx_l, idx_h] < 0:  # line 1 has vertex; line 2 doesn't
-                            continue
-                        elif arr_cls_vertex[active_id, idx_h] < 0 and arr_cls_vertex[idx_l, idx_h] > 0:  # line 1 has no vertex; line 2 has vertex here
-                            if last_active_v is None:
-                                arr_cls_vertex[active_id, idx_h] = arr_cls_vertex[idx_l, idx_h]
-                                arr_cls_vertex[idx_l, idx_h] = -1.
-                                last_active_v = arr_cls_vertex[active_id, idx_h]
-                            else:
-                                if abs(last_active_v - arr_cls_vertex[idx_l, idx_h]) < mean_dist_thre:
+                    if opt_line_align:
+                        arr_cls_vertex[active_id, :], arr_cls_vertex[idx_l, :] = lines_align(arr_cls_vertex[active_id, :], arr_cls_vertex[idx_l, :])
+                    if opt_point_2_point:
+                        for idx_h in range(num_h):
+                            if arr_cls_vertex[active_id, idx_h] < 0 and arr_cls_vertex[idx_l, idx_h] < 0:  # two lines have no vertex at this location
+                                continue
+                            elif arr_cls_vertex[active_id, idx_h] > 0 and arr_cls_vertex[idx_l, idx_h] < 0:  # line 1 has vertex; line 2 doesn't
+                                continue
+                            elif arr_cls_vertex[active_id, idx_h] < 0 and arr_cls_vertex[idx_l, idx_h] > 0:  # line 1 has no vertex; line 2 has vertex here
+                                if last_active_v is None:
                                     arr_cls_vertex[active_id, idx_h] = arr_cls_vertex[idx_l, idx_h]
                                     arr_cls_vertex[idx_l, idx_h] = -1.
                                     last_active_v = arr_cls_vertex[active_id, idx_h]
                                 else:
-                                    last_check_v = arr_cls_vertex[idx_l, idx_h]
-                        elif arr_cls_vertex[active_id, idx_h] > 0 and arr_cls_vertex[idx_l, idx_h] > 0:  # line 1 and line 2 both have vertex on this row
-                            if np.abs( arr_cls_vertex[idx_l, idx_h] - arr_cls_vertex[active_id, idx_h]) < mean_dist_thre:
-                                if semantic_map[idx_h * 8 + 3, int(arr_cls_vertex[active_id, idx_h])] > semantic_map[
-                                    idx_h * 8 + 3, int(arr_cls_vertex[idx_l, idx_h])]:
-                                    high_conf_v = arr_cls_vertex[active_id, idx_h]
-                                else:
-                                    high_conf_v = arr_cls_vertex[idx_l, idx_h]
-                                # then:
-                                if (last_active_v is None) and (last_check_v is None):
-                                    arr_cls_vertex[active_id, idx_h] = high_conf_v
-                                    arr_cls_vertex[idx_l, idx_h] = -1.
-                                    last_active_v = arr_cls_vertex[active_id, idx_h]
-                                elif (active_id is not None) and abs(last_active_v - high_conf_v) < mean_dist_thre:
-                                    arr_cls_vertex[active_id, idx_h] = high_conf_v
-                                    arr_cls_vertex[idx_l, idx_h] = -1.
-                                    last_active_v = arr_cls_vertex[active_id, idx_h]
-                                else:
-                                    arr_cls_vertex[active_id, idx_h] = -1.
-                                    arr_cls_vertex[idx_l, idx_h] = high_conf_v
-                                    last_check_v = arr_cls_vertex[idx_l, idx_h]
-                            else:
-                                if (last_active_v is None) and (last_check_v is None):
-                                    if arr_cls_vertex[active_id, idx_h] > arr_cls_vertex[idx_l, idx_h]:  # keep active_id is on the left
-                                        ttt = arr_cls_vertex[idx_l, idx_h]
-                                        arr_cls_vertex[idx_l, idx_h] = arr_cls_vertex[active_id, idx_h]
-                                        arr_cls_vertex[active_id, idx_h] = ttt
-                                        last_check_v = arr_cls_vertex[idx_l, idx_h]
+                                    if abs(last_active_v - arr_cls_vertex[idx_l, idx_h]) < mean_dist_thre:
+                                        arr_cls_vertex[active_id, idx_h] = arr_cls_vertex[idx_l, idx_h]
+                                        arr_cls_vertex[idx_l, idx_h] = -1.
                                         last_active_v = arr_cls_vertex[active_id, idx_h]
-
+                                    else:
+                                        last_check_v = arr_cls_vertex[idx_l, idx_h]
+                            elif arr_cls_vertex[active_id, idx_h] > 0 and arr_cls_vertex[idx_l, idx_h] > 0:  # line 1 and line 2 both have vertex on this row
+                                if np.abs( arr_cls_vertex[idx_l, idx_h] - arr_cls_vertex[active_id, idx_h]) < mean_dist_thre:
+                                    if semantic_map[idx_h * 8 + 3, int(arr_cls_vertex[active_id, idx_h])] > semantic_map[
+                                        idx_h * 8 + 3, int(arr_cls_vertex[idx_l, idx_h])]:
+                                        high_conf_v = arr_cls_vertex[active_id, idx_h]
+                                    else:
+                                        high_conf_v = arr_cls_vertex[idx_l, idx_h]
+                                    # then:
+                                    if (last_active_v is None) and (last_check_v is None):
+                                        arr_cls_vertex[active_id, idx_h] = high_conf_v
+                                        arr_cls_vertex[idx_l, idx_h] = -1.
+                                        last_active_v = arr_cls_vertex[active_id, idx_h]
+                                    elif (active_id is not None) and abs(last_active_v - high_conf_v) < mean_dist_thre:
+                                        arr_cls_vertex[active_id, idx_h] = high_conf_v
+                                        arr_cls_vertex[idx_l, idx_h] = -1.
+                                        last_active_v = arr_cls_vertex[active_id, idx_h]
+                                    else:
+                                        arr_cls_vertex[active_id, idx_h] = -1.
+                                        arr_cls_vertex[idx_l, idx_h] = high_conf_v
+                                        last_check_v = arr_cls_vertex[idx_l, idx_h]
+                                else:
+                                    if (last_active_v is None) and (last_check_v is None):
+                                        if arr_cls_vertex[active_id, idx_h] > arr_cls_vertex[idx_l, idx_h]:  # keep active_id is on the left
+                                            ttt = arr_cls_vertex[idx_l, idx_h]
+                                            arr_cls_vertex[idx_l, idx_h] = arr_cls_vertex[active_id, idx_h]
+                                            arr_cls_vertex[active_id, idx_h] = ttt
+                                            last_check_v = arr_cls_vertex[idx_l, idx_h]
+                                            last_active_v = arr_cls_vertex[active_id, idx_h]
+                
         active_id += 1
     arr_cls_vertex = interpolate_plyline(arr_cls_vertex)
 
@@ -124,82 +155,13 @@ def polyline_NMS2(arr_cls_vertex, semantic_map):
                 continue
             else:
                 min_dist, max_dist, mean_dist = Hausdorf_distance(arr_cls_vertex[active_id, :], arr_cls_vertex[idx_l, :])
-                if (max_dist >= 0.) and (max_dist < mean_dist_thre):  # two close lines, delete the shorter one:
+                if (max_dist >= 0.) and (max_dist < mean_dist_thre*1.5 or mean_dist < mean_dist_thre*0.8):  # two close lines, delete the shorter one:
                     if active_v_num < idx_v_num:
                         arr_cls_vertex[active_id, :] = -1.
                     else:
                         arr_cls_vertex[idx_l, :] = -1.
         active_id += 1
     return arr_cls_vertex
-
-def polyline_NMS(arr_cls_vertex_in, semantic_map):
-    '''
-
-    Args:
-        arr_cls_vertex_in: predicted polylines
-        semantic_map: predicted semantic map
-
-        if the mean overlapping distance < 20 and maximum overlapping distance < 50, then we need to check the vertex location,
-        to make sure that two polylines are not cross each other.
-
-    Returns:
-        polylines after Non-Maximum Suppression
-    '''
-    mean_dist_thre = 15
-    max_dist_thre = 100
-    active_id = 0
-    num_lane, num_h = arr_cls_vertex_in.shape
-    arr_cls_vertex = arr_cls_vertex_in.copy()
-    arr_slops = line_slop(arr_cls_vertex)
-    while active_id < num_lane - 1:  # for every lane
-        if len(np.where(arr_cls_vertex[active_id, :] > 0)[0]) < 2:
-            # arr_cls_vertex[active_id, :] = -1.
-            active_id += 1
-            continue
-        for idx_l in range(active_id + 1, num_lane):  # check the Hausdorf distance between lines
-            if len(np.where(arr_cls_vertex[idx_l, :] > 0)[0]) < 2:
-                continue
-            else:
-                max_dist, mean_dist = Hausdorf_distance(arr_cls_vertex[active_id, :], arr_cls_vertex[idx_l, :])
-                if (max_dist >= 0.) and (max_dist < max_dist_thre) and (mean_dist < mean_dist_thre) and (mean_dist >= 0.):  # two close lines, then merge them
-                    active_last_v = None
-                    idxl_last_v = None
-                    for idx_h in range(num_h):
-                        if arr_cls_vertex[active_id, idx_h] < 0 and arr_cls_vertex[idx_l, idx_h] < 0:  # two lines have no vertex at this location
-                            continue
-                        elif arr_cls_vertex[active_id, idx_h] > 0 and arr_cls_vertex[idx_l, idx_h] < 0:  # line 1 has vertex; line 2 doesn't
-                            if active_last_v is None:
-                                active_last_v = arr_cls_vertex[active_id, idx_h]
-                            continue
-                        elif arr_cls_vertex[active_id, idx_h] < 0 and arr_cls_vertex[idx_l, idx_h] > 0:  # line 1 has no vertex; line 2 has vertex here
-                            # arr_cls_vertex[active_id, idx_h] = arr_cls_vertex[idx_l, idx_h]
-                            # arr_cls_vertex[idx_l, idx_h] = -1.
-                            if idxl_last_v is None:
-                                idxl_last_v = arr_cls_vertex[idx_l, idx_h]
-                            continue
-                        elif arr_cls_vertex[active_id, idx_h] > 0 and arr_cls_vertex[idx_l, idx_h] > 0:  # line 1 and line 2 both have vertex on this row
-                            if np.abs( arr_cls_vertex[idx_l, idx_h] - arr_cls_vertex[active_id, idx_h]) < mean_dist_thre:
-                                if (active_last_v is None) or (idxl_last_v is None):
-                                    if semantic_map[idx_h * 8 + 3, int(arr_cls_vertex[active_id, idx_h])] > semantic_map[idx_h * 8 + 3, int(arr_cls_vertex[idx_l, idx_h])]:
-                                        arr_cls_vertex[idx_l, idx_h] = -1.
-                                    else:
-                                        arr_cls_vertex[active_id, idx_h] = -1.
-                                else:
-                                    if semantic_map[idx_h * 8 + 3, int(arr_cls_vertex[active_id, idx_h])] > semantic_map[idx_h * 8 + 3, int(arr_cls_vertex[idx_l, idx_h])]:
-                                        high_conf_v = arr_cls_vertex[active_id, idx_h]
-                                    else:
-                                        high_conf_v = arr_cls_vertex[idx_l, idx_h]
-
-                                    arr_cls_vertex[active_id, idx_h] = high_conf_v
-                                    arr_cls_vertex[idx_l, idx_h] = -1.
-                            else:
-                                if arr_cls_vertex[active_id, idx_h] > arr_cls_vertex[idx_l, idx_h]:  # keep active_id is on the left
-                                    ttt = arr_cls_vertex[idx_l, idx_h]
-                                    arr_cls_vertex[idx_l, idx_h] = arr_cls_vertex[active_id, idx_h]
-                                    arr_cls_vertex[active_id, idx_h] = ttt
-        active_id += 1
-    return arr_cls_vertex
-
 
 
 def sort_lines_from_left_to_right(lane_vertex):
@@ -211,22 +173,22 @@ def sort_lines_from_left_to_right(lane_vertex):
         if len(first_v[0]) > 0:
             first_v_valus[l_id] = lane_vertex[l_id, first_v[0][0]]
     sort_id = np.argsort(first_v_valus)
-    lane_vertex_copy = lane_vertex[sort_id, :]
+    lane_vertex_sorted = lane_vertex[sort_id, :]
 
-    return lane_vertex_copy
+    return lane_vertex_sorted
+
 def interpolate_plyline(lane_vertex):
     num_l, num_v = lane_vertex.shape
     for idx_line in range(num_l):
-        ph_idx = np.where(lane_vertex[idx_line, :] > 0)
+        ph_idx = np.where(lane_vertex[idx_line, :] > 0.0001)
         if len(ph_idx[0]) > 1:
             start_id = ph_idx[0][0]
             end_id = ph_idx[0][-1]
             current_positive_id = -1
             for v_id in range(start_id, end_id):
-                if lane_vertex[idx_line, v_id] < 0:
+                if lane_vertex[idx_line, v_id] < 0.0001:
                     tmp_ratio = (1.0 * v_id - ph_idx[0][current_positive_id]) / (
                                 ph_idx[0][current_positive_id + 1] - ph_idx[0][current_positive_id])
-                    # print("ratio:", tmp_ratio)
                     lane_vertex[idx_line, v_id] = (1 - tmp_ratio) * lane_vertex[
                         idx_line, ph_idx[0][current_positive_id]] + (
                                                   lane_vertex[idx_line, ph_idx[0][current_positive_id + 1]]) * tmp_ratio
@@ -260,18 +222,19 @@ def occupancy_filter(occu_flag, occu_seg_conf, half_k_size=4):
 def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, out_seg_conf=None):
     # traverse every lane from the first lane:
     buff_width = 6
-    buff_depth = 15
+    buff_depth = 24
     line_num, vertex_num = out_cls.shape
     # sort lines:
     smooth_cls = sort_lines_from_left_to_right(out_cls)
-    # smooth_cls = out_cls.copy()
+      
+    # smooth_cls_total = smooth_cls
     smooth_cls_total = np.zeros_like(out_cls) - 1
     exist_lane_length = np.zeros(line_num)
     flag_in0 = np.zeros((vertex_num, 1152))  # detected points location
     for idx_line in range(line_num):
         ph_idx = np.where(out_cls[idx_line, :] > 0)
         flag_in0[ph_idx[0], (out_cls[idx_line, ph_idx[0]]).astype(int)] = 1
-    # print("flag_in sumL ", np.sum(flag_in0))
+    
     if out_seg_conf is not None:
         flag_in = occupancy_filter(flag_in0, out_seg_conf[3:1152:8, :], half_k_size=4)
     else:
@@ -285,12 +248,12 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
         for idx_line in range(line_num):
             flag_start = False
             last_h = 0
-            idx_h = 0
+            idx_h = 0  # vertex row id
             active_lane_id = idx_line
 
             last_c = 0
             delta_last_d = 0
-            current_d = 0
+            h_step = 1  # row step
             while idx_h < vertex_num:
                 if flag_start and (idx_h - last_h > buff_depth):  # the distance between adjacent vertexes is too large
                     break
@@ -309,10 +272,13 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
                         last_c = current_col
                         active_lane_id = idx_line
                     idx_h += 1  # move to next row
+                    h_step = 1
                 else:  # vertex string
-                    next_pred_col = current_col + (current_dir - 5) * 4
+                    # next_pred_col = current_col + (current_dir - 5) * 4
+                    next_pred_col = current_col  #+ (current_dir - 5) * 4
                     if tmp_lane_length[idx_line] > 1:
-                        delta_last_d = current_col - last_c
+                        delta_last_d = (current_col - last_c) / h_step
+                        next_pred_col = current_col + delta_last_d  
                     near_dist = 1152
                     near_id = line_num
                     near_h = idx_h
@@ -349,9 +315,9 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
                         last_c = current_col
                         current_col = smooth_cls[near_id, near_h]
                         current_dir = out_orient[near_h, int(current_col / 8)]
-                        current_h = near_h
                         next_pred_col = current_col + (current_dir - 5) * 4
                         flag_in[near_h, int(smooth_cls[near_id, near_h])] = 0  # this vertex is occupied
+                        h_step = near_h - last_h
                         last_h = near_h
                         idx_h = near_h + 1
                         active_lane_id = near_id
@@ -360,6 +326,7 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
                         # we find no next vertex, then stop extending this line.
                         # break
                         idx_h += 1
+                        h_step += 1
                 # print("idx_h: ", idx_h)
         # print("flag_in sumL3 ", np.sum(flag_in))
         # print("minimun length: ", exist_lane_length.min())
@@ -372,7 +339,8 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
                 tmp_endp_idx_h = tmp_vertex_idx[0][-1]
                 tmp_endp_idx_value = temp_smooth_cls[idx_line, tmp_endp_idx_h]
                 tmp_endp_dir = out_orient[tmp_endp_idx_h, int(tmp_endp_idx_value / 8)]
-                tmp_endp_next_col = tmp_endp_idx_value + (tmp_endp_dir - 5) * 4
+                # tmp_endp_next_col = tmp_endp_idx_value + (tmp_endp_dir - 5) * 4
+                tmp_endp_next_col = tmp_endp_idx_value + (tmp_endp_idx_value - temp_smooth_cls[idx_line, tmp_vertex_idx[0][-2]])
 
                 attached = False
                 for sub_idx_line in range(line_num):
@@ -384,12 +352,13 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
                         endp_idx_h = vertex_idx[0][-1]
                         ednp_idx_value = smooth_cls_total[sub_idx_line, endp_idx_h]
                         current_end_dir = out_orient[endp_idx_h, int(ednp_idx_value / 8)]
-                        endp_next_col = ednp_idx_value + (current_end_dir - 5) * 4
+                        # endp_next_col = ednp_idx_value + (current_end_dir - 5) * 4
+                        endp_next_col = ednp_idx_value + (ednp_idx_value - smooth_cls_total[sub_idx_line, vertex_idx[0][-2]])
                         #  attach to bottom || # attach to top
                         if (0 < (tmp_startp_idx_h - endp_idx_h) < buff_depth and np.abs(
-                                endp_next_col - tmp_startp_idx_value) < buff_width * 2) or \
+                                endp_next_col - tmp_startp_idx_value) < buff_width) or \
                                 (0 < (startp_idx_h - tmp_endp_idx_h) < buff_depth and np.abs(
-                                    tmp_endp_next_col - startp_idx_value) < buff_width * 2):
+                                    tmp_endp_next_col - startp_idx_value) < buff_width):
                             smooth_cls_total[sub_idx_line, tmp_vertex_idx[0]] = temp_smooth_cls[
                                 idx_line, tmp_vertex_idx[0]]
                             exist_lane_length[sub_idx_line] += tmp_lane_length[idx_line]
@@ -405,12 +374,16 @@ def smooth_cls_line_per_batch(out_cls, out_orient, complete_inner_nodes=False, o
                             break
 
     # if complete the inner nodes
+    
     if complete_inner_nodes:
         smooth_cls_total = interpolate_plyline(smooth_cls_total)
-
+    
     # return the lines after smoothing
-    # smooth_cls_total1 = self.modify_topology(smooth_cls_total)
     smooth_cls_total = sort_lines_from_left_to_right(smooth_cls_total)
+    
+    # if two lines are close enough, then keep the two polylines parallel but not intersect
+    # smooth_cls_total1 = modify_topology(smooth_cls_total)
+    
     return smooth_cls_total
 
 '''

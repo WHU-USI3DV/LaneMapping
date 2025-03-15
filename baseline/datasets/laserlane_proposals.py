@@ -503,7 +503,7 @@ def load_datadir(data_root, data_split_file, image_path, seq_path, mask_path, in
     test_list = list(json_list['test'])  # all data: pretrain;   # test/val: test
     val_list = list(json_list['valid'])
     single_list = list(json_list['single'])
-    all_list = list(json_list['all'])
+    all_list = list(json_list['pretrain'])
 
     if mode == 'single':
         json_list = [x + '.json' for x in single_list]

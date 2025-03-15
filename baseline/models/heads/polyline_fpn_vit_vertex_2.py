@@ -30,7 +30,7 @@ from baseline.models.loss import FocalLoss
 from baseline.models.loss import MeanLoss
 from baseline.utils.vis_utils import get_lane_on_raw_image_coordinates, \
     get_semantic_lane_on_raw_image_coordinates, get_endp_on_raw_image, get_gt_endp_on_raw_image
-from baseline.utils.polyline_utils import polyline_uniform_semantics_by_statistics, smooth_cls_line_per_batch, polyline_NMS, \
+from baseline.utils.polyline_utils import polyline_uniform_semantics_by_statistics, smooth_cls_line_per_batch,\
                                           sort_lines_from_left_to_right, polyline_NMS2, remove_short_polyline,\
                                           renew_semantic_map
 

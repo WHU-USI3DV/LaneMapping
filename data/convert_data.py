@@ -444,7 +444,8 @@ if __name__=='__main__':
     # multiprocessing
     # old_seq_dir = "./LaserLane/All/labels/annotation_seq"  #"/workspace/All/labels/annotation_seq"
     # old_seq_dir = "/data/mxx/data/LaserLane/Test-Area-2/labels/annotation_seq"   # for evaluation data-1
-    old_seq_dir = "./data/LaserLane/All/labels_inside_lidar_range/annotation_seq"   # for inside_lidar_range
+    # old_seq_dir = "./data/LaserLane/All/labels_inside_lidar_range/annotation_seq"   # for inside_lidar_range
+    old_seq_dir = "./data/LaserLane/Test-Area-WuhanDonghugaoxin/labels/annotation_seq"   # for test Wuhan data
     
     parent_dir, _ = os.path.split(old_seq_dir)
     os.chmod(parent_dir, mode=0o777)   # give the permission

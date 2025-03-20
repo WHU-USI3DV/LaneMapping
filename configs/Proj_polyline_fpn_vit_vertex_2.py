@@ -17,6 +17,7 @@ number_orients = 11  # [0, 1, 2, ,,, 10]
 gt_downsample_ratio = 8  # GT downsample range
 flip_label = False
 use_lidar = False  # if load ego lidar points
+is_gt_avai = True  # if grounf truth is available
 
 net = dict(
     type='Detector1stage',

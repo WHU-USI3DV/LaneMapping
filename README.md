@@ -162,18 +162,18 @@ $ python train_gpu_0.py
 
 ## ✏️ Test
 
-To eval LaneMapping on the other two test areas, you can use the following commands, and do not forget modify the corresponding datapath in config file:
+To eval LaneMapping on the other two test areas, you can use the following commands, and do not forget to modify the corresponding datapath in the config file:
 
 ```bash
 $python test_gpu_0.py
 ```
 
 ## ✏️ Project point cloud to the BEV image
-If you want to follow the BEV generation pipeline (preprocessing) in this article, please refer [Las2BEV](https://github.com/MIXIAOXIN/Las2BEV)
+If you want to follow the BEV generation pipeline (preprocessing) in this article, please refer to [Las2BEV](https://github.com/MIXIAOXIN/Las2BEV)
 
 ## ✏️ Merge local lane map to the global map
 
-Firstly, convert the predicted lanes on BEV to the LiDAR coordinate system.
+Firstly, the predicted lanes on BEV are converted to the LiDAR coordinate system.
 ```bash
 $python ./baseline/utils/coor_img2pc.py
 ```

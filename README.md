@@ -56,7 +56,7 @@ pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https
 
 ### c. Install mmcv-full. (optional: to validate LidarEncoder: SparseConv)
 
-follow the instructions here: https://mmdetection3d.readthedocs.io/en/latest/get_started.html
+Follow the instructions here: https://mmdetection3d.readthedocs.io/en/latest/get_started.html
 
 ```
 pip install -U openmim
@@ -71,8 +71,8 @@ git clone https://github.com/open-mmlab/mmdetection3d.git -b dev-1.x
 cd mmdetection3d
 pip install -v -e .
 # "-v" means verbose, or more output
-# "-e" means installing a project in edtiable mode,
-# thus any local modifications made to the code will take effect without reinstallation.
+# "-e" means installing a project in editable mode,
+# Thus, any local modifications made to the code will take effect without reinstallation.
 ```
 
 ### d. install other third party libs
@@ -154,7 +154,7 @@ Or the whole WHU-LaserLane dataset from [BaiduDisk](https://pan.baidu.com/s/1u6A
 
 ## ⏳ Train
 
-To train the LaneMapping network, you should prepare the dataset and put it in  './data/.'. Then, you use the following command:
+To train the LaneMapping network, prepare the dataset and put it in  './data/.'. Then, you use the following command:
 
 ```bash
 $ python train_gpu_0.py
@@ -162,7 +162,7 @@ $ python train_gpu_0.py
 
 ## ✏️ Test
 
-To eval LaneMapping on the other two test areas, you can use the following commands, and do not forget to modify the corresponding datapath in the config file:
+To evaluate LaneMapping on the other two test areas, you can use the following commands, and do not forget to modify the corresponding datapath in the config file:
 
 ```bash
 $python test_gpu_0.py

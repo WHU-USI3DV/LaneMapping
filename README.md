@@ -168,6 +168,9 @@ To eval LaneMapping on the other two test areas, you can use the following comma
 $python test_gpu_0.py
 ```
 
+## ✏️ Project point cloud to the BEV image
+If you want to follow the BEV generation pipeline (preprocessing) of the artical, please refer [Las2BEV](https://github.com/MIXIAOXIN/Las2BEV)
+
 ## ✏️ Merge local lane map to the global map
 
 Firstly, convert the predicted lanes on BEV to the LiDAR coordinate system.

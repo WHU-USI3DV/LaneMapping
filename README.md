@@ -169,7 +169,7 @@ $python test_gpu_0.py
 ```
 
 ## ✏️ Project point cloud to the BEV image
-If you want to follow the BEV generation pipeline (preprocessing) of the artical, please refer [Las2BEV](https://github.com/MIXIAOXIN/Las2BEV)
+If you want to follow the BEV generation pipeline (preprocessing) in this article, please refer [Las2BEV](https://github.com/MIXIAOXIN/Las2BEV)
 
 ## ✏️ Merge local lane map to the global map
 

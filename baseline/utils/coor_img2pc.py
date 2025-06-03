@@ -147,8 +147,8 @@ def transform_coordinate_from_img_2_pc(params, img_seqs, img_seq_lens, bev_img):
     # print("locations2: ", np.where(np.sum(bev_img, axis=2) < 1))
     # cv2.waitKey(0)
 
-    # seqs_3d[:, :, 2] = bev_img[img_seqs[:, :, 0].astype(int), img_seqs[:, :, 1].astype(int), 1] * params['ele_reso'] + params['local_min_ele']
-    seqs_3d[:, :, 2] = bev_img[img_seqs[:, :, 0].astype(int), img_seqs[:, :, 1].astype(int), 1] * 0.05 + params['local_min_ele']  # real elevation_reso = 0.05
+    seqs_3d[:, :, 2] = bev_img[img_seqs[:, :, 0].astype(int), img_seqs[:, :, 1].astype(int), 1] * params['ele_reso'] + params['local_min_ele']
+    # seqs_3d[:, :, 2] = bev_img[img_seqs[:, :, 0].astype(int), img_seqs[:, :, 1].astype(int), 1] * 0.05 + params['local_min_ele']  # real elevation_reso = 0.05
 
     # smooth elevation value here
     for l_id in range(n_line):
@@ -177,7 +177,7 @@ def transform_coordinate_from_img_2_pc(params, img_seqs, img_seq_lens, bev_img):
     seqs_3d += las_read_offset
     #####################
     # to show, add extra elevation offset
-    seqs_3d[:, :, 2] += 0.25
+    # seqs_3d[:, :, 2] += 0.25
     ####################
 
     return seqs_3d

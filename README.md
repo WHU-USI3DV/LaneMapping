@@ -202,6 +202,9 @@ author = {Xiaoxin Mi and Zhen Dong and Zhipeng Cao and Bisheng Yang and Zhen Cao
 }
 ```
 
+## License
+Source code and pretrained models are available under the Apache License 2.0 to facilitate reproducibility. The dataset is licensed under CC BY-NC 4.0, ensuring academic research but not commercial use.
+
 ## 🔗 Related Projects
 
 We sincerely thank the excellent projects:
